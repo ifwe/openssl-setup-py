@@ -126,7 +126,7 @@ class install_bin(basic_command):
     def run(self):
         self.run_command('download')
         os.chdir(subject_name)
-        bin_dir = os.path.join(distutils.sysconfig.PREFIX, 'DLLs')
+        bin_dir = os.path.join(distutils.sysconfig.PREFIX, 'Scripts') # TODO: DLLs
         if not os.path.isdir(bin_dir):
             os.makedirs(bin_dir)
         assert os.path.isdir('dlls')
