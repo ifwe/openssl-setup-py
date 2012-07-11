@@ -91,7 +91,7 @@ class install_headers(basic_command):
     def run(self):
         self.run_command('download')
         os.chdir(subject_name)
-        includes_dir = os.path.join(distutils.sysconfig.PREFIX, 'Include')
+        includes_dir = os.path.join(distutils.sysconfig.PREFIX, 'PC')
         if not os.path.isdir(includes_dir):
             os.makedirs(includes_dir)
         assert os.path.isdir('include')
