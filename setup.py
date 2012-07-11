@@ -136,19 +136,24 @@ class install(basic_command):
         self.run_command('install_bin')
 
 
+class develop(install):
+    pass
+
 if __name__ == '__main__':
+
+    cmdclass = dict((x, globals()[x]) for x in (
+        'develop',
+        'install',
+        'install_lib',
+        'install_bin',
+        'install_headers',
+        'download'
+    ))
+    cmdclass['develop'] = install
 
     distutils.core.setup(
         name = 'OpenSSL',
         version = version,
-        cmdclass = dict((x, globals()[x]) for x in
-            ('install',
-             'install_lib',
-             'install_bin',
-             'install_headers',
-             #'build_ext',
-             #'patch',
-             #'configure',
-             'download'))
+        cmdclass = cmdclass
     )
     os.chdir(start_dir)
