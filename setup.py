@@ -15,6 +15,7 @@ subject_name = "OpenSSL-Win32-Binaries" % locals()
 tarball_fname = '%(subject_name)s.zip' % locals()
 tarball_url = 'https://github.com/kevinw/openssl-setup-py/blob/master/%(tarball_fname)s?raw=true' % locals()
 
+
 def call(*args):
     log.info('Executing: %r', args)
     subprocess.call(args)
@@ -126,6 +127,7 @@ class install_bin(basic_command):
         assert os.path.isdir('dlls')
         call('cp', '-R', 'dlls/*', bin_dir)
         os.chdir(start_dir)
+
 
 class install(basic_command):
     user_options = []
