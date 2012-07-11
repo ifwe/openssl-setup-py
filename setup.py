@@ -1,4 +1,3 @@
-import os
 import os.path
 import subprocess
 import logging
@@ -12,10 +11,9 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 version = '1.0.1c'
-subject_name = "openssl-%(version)s" % locals()
-tarball_fname = '%(subject_name)s.tar.gz' % locals()
-tarball_url = 'http://www.openssl.org/source/%(tarball_fname)s' % locals()
-
+subject_name = "OpenSSL-Win32-Binaries" % locals()
+tarball_fname = '%(subject_name)s.zip' % locals()
+tarball_url = 'https://github.com/kevinw/openssl-setup-py/blob/master/%(tarball_fname)s?raw=true' % locals()
 
 def call(*args):
     log.info('Executing: %r', args)
@@ -41,55 +39,56 @@ class download(basic_command):
         # Download and unpack tarball if necessary. NOTE: there is NO validation here!
         if not os.path.isdir(subject_name):
             if not os.path.isfile(tarball_fname):
-                call('curl', tarball_url, '--output', tarball_fname)
+                call('curl', '-L', tarball_url, '--output', tarball_fname)
 
-            call('tar', '-xzf', tarball_fname, subject_name)
-
-
-class configure(basic_command):
-    sub_commands = ['download']
-    user_options = []
-
-    def run(self):
-        self.run_command('download')
-        # Configure
-        os.chdir(subject_name)
-        call("perl", 'Configure', 'VC-WIN32')
-        os.chdir(start_dir)
+            call('unzip', tarball_fname)
 
 
-class patch(basic_command):
-    user_options = []
+#class configure(basic_command):
+#    sub_commands = ['download']
+#    user_options = []
+#
+#    def run(self):
+#        self.run_command('download')
+#        # Configure
+#        os.chdir(subject_name)
+#        call("perl", 'Configure', 'VC-WIN32')
+#        os.chdir(start_dir)
 
-    def run(self):
-        self.run_command('configure')
-        # Patch one of the build scripts to make sure it'll work with nmake
-        os.chdir(subject_name)
-        os.chdir('util')
-        call('patch', '-f', 'mk1mf.pl', os.path.join(start_dir, "mk1mf_chomp_newlines.patch"))
-        os.chdir(start_dir)
+
+# class patch(basic_command):
+#    user_options = []
+#
+#    def run(self):
+#        self.run_command('configure')
+#        # Patch one of the build scripts to make sure it'll work with nmake
+#        os.chdir(subject_name)
+#        os.chdir('util')
+#        call('patch', '-f', 'mk1mf.pl', os.path.join(start_dir, "mk1mf_chomp_newlines.patch"))
+#        os.chdir(start_dir)
 
 
-class build_ext(basic_command):
-    user_options = []
-
-    def run(self):
-        self.run_command('patch')
-        os.chdir(subject_name)
-        call('ms\\do_nasm.bat')
-        call('nmake', '-f', 'ms\\ntdll.mak')
-        os.chdir(start_dir)
+#class build_ext(basic_command):
+#    user_options = []
+#
+#    def run(self):
+#        #self.run_command('patch')
+#        os.chdir(subject_name)
+#        call('ms\\do_nasm.bat')
+#        call('nmake', '-f', 'ms\\ntdll.mak')
+#        os.chdir(start_dir)
 
 
 class install_headers(basic_command):
     user_options = []
 
     def run(self):
-        self.run_command('build_ext')
+        self.run_command('download')
         os.chdir(subject_name)
-        includes_dir = os.path.expandvars('$VIRTUAL_ENV/PC/.')
+        includes_dir = os.path.join(distutils.sysconfig.PREFIX, 'Include')
         if not os.path.isdir(includes_dir):
             os.makedirs(includes_dir)
+        assert os.path.isdir('include')
         call('cp', '-R', 'include/*', includes_dir)
         os.chdir(start_dir)
 
@@ -98,14 +97,28 @@ class install_lib(basic_command):
     user_options = []
 
     def run(self):
-        self.run_command('build_ext')
+        self.run_command('download')
         os.chdir(subject_name)
-        lib_dir = os.path.expandvars('$VIRTUAL_ENV/PCBuild/.')
+        lib_dir = os.path.join(distutils.sysconfig.PREFIX, 'libs')
         if not os.path.isdir(lib_dir):
             os.makedirs(lib_dir)
-        call('cp', '-R', 'out32dll/*', lib_dir)
+        assert os.path.isdir('lib')
+        call('cp', '-R', 'lib/*', lib_dir)
         os.chdir(start_dir)
 
+
+class install_bin(basic_command):
+    user_options = []
+
+    def run(self):
+        self.run_command('download')
+        os.chdir(subject_name)
+        bin_dir = os.path.join(distutils.sysconfig.PREFIX, 'DLLs')
+        if not os.path.isdir(bin_dir):
+            os.makedirs(bin_dir)
+        assert os.path.isdir('dlls')
+        call('cp', '-R', 'dlls/*', bin_dir)
+        os.chdir(start_dir)
 
 class install(basic_command):
     user_options = []
@@ -113,6 +126,7 @@ class install(basic_command):
     def run(self):
         self.run_command('install_headers')
         self.run_command('install_lib')
+        self.run_command('install_bin')
 
 
 if __name__ == '__main__':
@@ -123,10 +137,11 @@ if __name__ == '__main__':
         cmdclass = dict((x, globals()[x]) for x in
             ('install',
              'install_lib',
+             'install_bin',
              'install_headers',
-             'build_ext',
-             'patch',
-             'configure',
+             #'build_ext',
+             #'patch',
+             #'configure',
              'download'))
     )
     os.chdir(start_dir)
