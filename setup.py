@@ -15,6 +15,7 @@ subject_name = "OpenSSL-Win32-Binaries" % locals()
 tarball_fname = '%(subject_name)s.zip' % locals()
 tarball_url = 'https://github.com/kevinw/openssl-setup-py/blob/master/%(tarball_fname)s?raw=true' % locals()
 
+
 def call(*args):
     log.info('Executing: %r', args)
     subprocess.call(args)
@@ -25,6 +26,7 @@ start_dir = os.path.dirname(os.path.abspath(__file__))
 class basic_command(distutils.core.Command):
     config_vars = []
     user_options = []
+    config_vars = []
     install_dir = distutils.sysconfig.get_python_lib()
     install_scripts = None
     skip_build = False
@@ -126,6 +128,7 @@ class install_bin(basic_command):
         call('cp', '-R', 'dlls/*', bin_dir)
         os.chdir(start_dir)
 
+
 class install(basic_command):
     user_options = []
 
@@ -135,20 +138,24 @@ class install(basic_command):
         self.run_command('install_bin')
 
 
+class develop(install):
+    pass
+
 if __name__ == '__main__':
+
+    cmdclass = dict((x, globals()[x]) for x in (
+        'develop',
+        'install',
+        'install_lib',
+        'install_bin',
+        'install_headers',
+        'download'
+    ))
+    cmdclass['develop'] = install
 
     distutils.core.setup(
         name = 'OpenSSL',
         version = version,
-        cmdclass = dict((x, globals()[x]) for x in
-            ('install',
-             'install_lib',
-             'install_bin',
-             'install_headers',
-             'develop',
-             #'build_ext',
-             #'patch',
-             #'configure',
-             'download'))
+        cmdclass = cmdclass
     )
     os.chdir(start_dir)
