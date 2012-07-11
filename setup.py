@@ -23,6 +23,7 @@ start_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 class basic_command(distutils.core.Command):
+    config_vars = []
     user_options = []
 
     def initialize_options(self):
@@ -50,7 +51,7 @@ class download(basic_command):
 #
 #    def run(self):
 #        self.run_command('download')
-#        # Configure
+#        # Gonfigure
 #        os.chdir(subject_name)
 #        call("perl", 'Configure', 'VC-WIN32')
 #        os.chdir(start_dir)
