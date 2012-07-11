@@ -6,6 +6,11 @@ import distutils
 import distutils.core
 import distutils.command
 
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
 logging.basicConfig(format = '%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
@@ -153,9 +158,8 @@ if __name__ == '__main__':
     ))
     cmdclass['develop'] = install
 
-    distutils.core.setup(
+    setup(
         name = 'OpenSSL',
         version = version,
         cmdclass = cmdclass
     )
-    os.chdir(start_dir)
